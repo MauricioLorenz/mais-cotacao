@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cotação Shows — Mais Show</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .input-base {
+      width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db;
+      border-radius: 0.5rem; font-size: 0.875rem; outline: none;
+      transition: box-shadow .15s, border-color .15s;
+    }
+    .input-base:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+    select.input-base { background: white; cursor: pointer; }
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    #configDrawer { transition: transform .25s cubic-bezier(.4,0,.2,1); }
+    #configDrawer.open { transform: translateX(0); }
+    #configDrawer.closed { transform: translateX(100%); }
+    #configOverlay { transition: opacity .2s; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800">
+
+<!-- HEADER -->
+<header class="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+    <span class="text-2xl">🎵</span>
+    <div>
+      <h1 id="headerTitle" class="text-base font-bold text-gray-900 leading-tight">Cotação Shows — GICA</h1>
+      <p class="text-xs text-gray-400">Mais Show / Grupo Be · v1.0</p>
+    </div>
+    <div class="ml-auto flex items-center gap-2">
+      <a href="/docs" target="_blank"
+        class="text-xs text-blue-500 hover:text-blue-700 border border-blue-200 hover:border-blue-400 px-3 py-1.5 rounded-lg transition-colors">
+        API Docs →
+      </a>
+      <button onclick="openConfig()"
+        class="text-xs text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+        ⚙️ <span>Configurações</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="max-w-7xl mx-auto px-4 py-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+    <!-- ═══════════════ FORMULÁRIO ═══════════════ -->
+    <div>
+      <form id="form" onsubmit="submitForm(event)" novalidate>
+
+        <!-- ── DADOS DO SHOW ── -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
+          <h2 class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4">🎤 Dados do Show</h2>
+          <div class="space-y-3">
+
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Tipo de Show <span class="text-red-400">*</span></label>
+              <select id="tipo_show" required class="input-base">
+                <option value="">Selecione o tipo...</option>
+                <option value="ticket">🎟️ Ticket (bilheteria)</option>
+                <option value="privado">🏢 Privado / Corporativo</option>
+                <option value="prefeitura">🏛️ Prefeitura / Poder Público</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Data do Evento <span class="text-red-400">*</span></label>
+                <input id="data_evento" type="text" placeholder="DD/MM/AAAA" required maxlength="10"
+                  class="input-base" oninput="maskDate(this)">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Hora de Início</label>
+                <input id="hora_inicio" type="text" placeholder="21:00" maxlength="5" class="input-base">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Cidade <span class="text-red-400">*</span></label>
+                <input id="cidade" type="text" placeholder="Florianopolis" required class="input-base">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">UF <span class="text-red-400">*</span></label>
+                <input id="estado" type="text" placeholder="SC" required maxlength="2"
+                  class="input-base uppercase" oninput="this.value=this.value.toUpperCase()">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Local / Venue</label>
+              <input id="local" type="text" placeholder="Arena Petry, Ginásio Municipal..." class="input-base">
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Capacidade</label>
+                <input id="capacidade_publico" type="number" placeholder="3000" min="0" class="input-base">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Duração Set (min)</label>
+                <input id="duracao_set" type="number" placeholder="60" min="0" class="input-base">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── DADOS DO CONTRATANTE ── -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
+          <h2 class="text-xs font-bold text-purple-600 uppercase tracking-widest mb-4">👤 Dados do Contratante</h2>
+          <div class="space-y-3">
+
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Nome do Contratante <span class="text-red-400">*</span></label>
+              <input id="nome_contratante" type="text" placeholder="João Produtor Eventos Ltda" required class="input-base">
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Tipo do Contratante <span class="text-red-400">*</span></label>
+              <select id="tipo_contratante" required class="input-base">
+                <option value="">Selecione...</option>
+                <option value="pj">Pessoa Jurídica (PJ)</option>
+                <option value="pf">Pessoa Física (PF)</option>
+                <option value="prefeitura">Prefeitura</option>
+                <option value="governo">Governo Estadual/Federal</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">CNPJ / CPF</label>
+                <input id="cnpj_cpf" type="text" placeholder="00.000.000/0001-00" class="input-base">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Forma de Pagamento</label>
+                <select id="forma_pagamento" class="input-base">
+                  <option value="">Não informado</option>
+                  <option value="pix">PIX</option>
+                  <option value="ted">TED</option>
+                  <option value="boleto">Boleto</option>
+                  <option value="cheque">Cheque</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Orçamento Informado (R$)</label>
+              <input id="orcamento_informado" type="number" placeholder="50000" min="0" step="0.01" class="input-base">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── SHOWS ADJACENTES ── -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
+          <h2 class="text-xs font-bold text-orange-600 uppercase tracking-widest mb-1">🗺️ Shows Adjacentes</h2>
+          <p class="text-xs text-gray-400 mb-4">Define o cenário logístico (A, B ou C)</p>
+
+          <div class="mb-4">
+            <label class="flex items-center gap-3 cursor-pointer select-none">
+              <input type="checkbox" id="show_dia_anterior" onchange="toggleAdjacente('anterior')"
+                class="w-4 h-4 accent-orange-500 cursor-pointer">
+              <div>
+                <span class="text-sm font-medium text-gray-700">Show no dia <strong>anterior</strong></span>
+                <span class="ml-2 text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">Cenário A</span>
+              </div>
+            </label>
+            <div id="anterior_fields" class="hidden mt-3 pl-7 grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Data do show anterior</label>
+                <input id="data_anterior" type="text" placeholder="DD/MM/AAAA" maxlength="10"
+                  class="input-base" oninput="maskDate(this)">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Cidade do show anterior</label>
+                <input id="cidade_dia_anterior" type="text" placeholder="Curitiba" class="input-base">
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-gray-100">
+
+          <div class="mt-4">
+            <label class="flex items-center gap-3 cursor-pointer select-none">
+              <input type="checkbox" id="show_dia_seguinte" onchange="toggleAdjacente('seguinte')"
+                class="w-4 h-4 accent-orange-500 cursor-pointer">
+              <div>
+                <span class="text-sm font-medium text-gray-700">Show no dia <strong>seguinte</strong></span>
+                <span class="ml-2 text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">Cenário B</span>
+              </div>
+            </label>
+            <div id="seguinte_fields" class="hidden mt-3 pl-7 grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Data do show seguinte</label>
+                <input id="data_seguinte" type="text" placeholder="DD/MM/AAAA" maxlength="10"
+                  class="input-base" oninput="maskDate(this)">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Cidade do show seguinte</label>
+                <input id="cidade_dia_seguinte" type="text" placeholder="Porto Alegre" class="input-base">
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 bg-orange-50 rounded-xl text-xs text-orange-700 leading-relaxed">
+            <strong>Sem adjacentes marcados:</strong> Cenário C — logística sai de São Paulo/SP (ida e volta incluídas).
+          </div>
+        </div>
+
+
+        <!-- ── SUBMIT ── -->
+        <button type="submit" id="submitBtn"
+          class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[.99] text-white font-bold py-4 px-6 rounded-2xl text-base transition-all duration-150 flex items-center justify-center gap-3 shadow-lg shadow-blue-200">
+          <span id="btnIcon" class="text-lg">⚡</span>
+          <span id="btnText">Gerar Cotação</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- ═══════════════ PAINEL DE RESULTADO ═══════════════ -->
+    <div id="resultPanel" class="lg:sticky lg:top-20">
+      <div id="emptyState" class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-16 text-center">
+        <div class="text-6xl mb-4 opacity-30">📋</div>
+        <h3 class="text-gray-400 font-semibold mb-2">Aguardando cotação</h3>
+        <p class="text-gray-300 text-sm">Preencha o formulário ao lado<br>e clique em "Gerar Cotação"</p>
+      </div>
+      <div id="resultContent" class="hidden space-y-4"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ═══════════════ DRAWER DE CONFIGURAÇÕES ═══════════════ -->
+<div id="configOverlay" class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm hidden opacity-0"
+  onclick="closeConfig()"></div>
+
+<div id="configDrawer"
+  class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 shadow-2xl overflow-y-auto closed">
+
+  <div class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
+    <div>
+      <h2 class="font-bold text-gray-900">Configurações do Sistema</h2>
+      <p class="text-xs text-gray-400 mt-0.5">Alterações aplicadas imediatamente, sem reiniciar</p>
+    </div>
+    <button onclick="closeConfig()" class="text-gray-400 hover:text-gray-700 text-2xl leading-none p-1">×</button>
+  </div>
+
+  <div class="p-6 space-y-6">
+
+    <!-- Artista -->
+    <div>
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">🎤 Artista</h3>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Nome do Artista</label>
+        <input id="cfg_nome_artista" type="text" placeholder="GICA" class="input-base">
+      </div>
+    </div>
+
+    <hr class="border-gray-100">
+
+    <!-- Cache Base -->
+    <div>
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">💰 Cache Base (R$)</h3>
+      <div class="space-y-3">
+        <div class="flex items-center gap-3">
+          <span class="text-lg">🎟️</span>
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Ticket (bilheteria)</label>
+            <input id="cfg_cache_ticket" type="number" min="0" step="100" placeholder="25000" class="input-base">
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-lg">🏢</span>
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Privado / Corporativo</label>
+            <input id="cfg_cache_privado" type="number" min="0" step="100" placeholder="40000" class="input-base">
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-lg">🏛️</span>
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Prefeitura / Poder Público</label>
+            <input id="cfg_cache_prefeitura" type="number" min="0" step="100" placeholder="80000" class="input-base">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="border-gray-100">
+
+    <!-- Logística -->
+    <div>
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">🚛 Logística</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Custo por km (R$/km)</label>
+          <input id="cfg_custo_km" type="number" min="0" step="0.5" placeholder="9.0" class="input-base">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Limite terrestre (km)</label>
+          <input id="cfg_limite_terrestre_km" type="number" min="0" step="50" placeholder="800" class="input-base">
+        </div>
+      </div>
+      <p class="text-xs text-gray-400 mt-2">Acima do limite terrestre → modal aéreo (custo a cotar).</p>
+      <div class="mt-3">
+        <label class="block text-xs font-bold text-gray-500 mb-2">📍 Cidade base de saída (Cenário isolado)</label>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-gray-400 mb-1">Cidade</label>
+            <input id="cfg_cidade_base" type="text" placeholder="São Paulo" class="input-base">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">UF</label>
+            <input id="cfg_uf_base" type="text" placeholder="SP" maxlength="2" class="input-base uppercase">
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Usada quando não há roteiro no dia anterior ou seguinte.</p>
+      </div>
+    </div>
+
+    <hr class="border-gray-100">
+
+    <!-- Despesas Locais -->
+    <div>
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">🏨 Despesas Locais</h3>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Nº de pessoas</label>
+            <input id="cfg_qtd_pessoas" type="number" min="1" placeholder="8" class="input-base">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Diária alim./pessoa (R$)</label>
+            <input id="cfg_valor_diaria" type="number" min="0" step="10" placeholder="120" class="input-base">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Camarins exigidos</label>
+            <input id="cfg_qtd_camarins" type="number" min="0" placeholder="2" class="input-base">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Carregadores</label>
+            <input id="cfg_qtd_carregadores" type="number" min="0" placeholder="4" class="input-base">
+          </div>
+        </div>
+        <div id="cfgTotalDespesas" class="p-3 bg-gray-50 rounded-xl text-xs text-gray-600 font-medium"></div>
+      </div>
+    </div>
+
+    <hr class="border-gray-100">
+
+    <!-- Modelo Ticket -->
+    <div>
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">🎟️ Modelo Ticket</h3>
+      <p class="text-xs text-gray-400 mb-3">Aplicado quando tipo de show = Ticket</p>
+      <div class="space-y-3">
+
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-2">Tipo de Garantia</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 p-3 border rounded-xl cursor-pointer hover:bg-amber-50 transition-colors has-[:checked]:border-amber-400 has-[:checked]:bg-amber-50">
+              <input type="radio" name="cfg_ticket_tipo" value="garantia_porta" id="cfg_tipo_gp" onchange="toggleGarantiaFields()"
+                class="accent-amber-500">
+              <div>
+                <div class="text-xs font-semibold text-gray-700">Garantia + Porta</div>
+                <div class="text-xs text-gray-400">Mín + % bilheteria</div>
+              </div>
+            </label>
+            <label class="flex items-center gap-2 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-blue-400 has-[:checked]:bg-blue-50">
+              <input type="radio" name="cfg_ticket_tipo" value="fixo" id="cfg_tipo_fixo" onchange="toggleGarantiaFields()"
+                class="accent-blue-500">
+              <div>
+                <div class="text-xs font-semibold text-gray-700">Cache Fixo</div>
+                <div class="text-xs text-gray-400">Valor fechado, sem porta</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div id="garantiaFields" class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Garantia mínima (R$)</label>
+              <input id="cfg_garantia_minima" type="number" min="0" step="500" placeholder="18000" class="input-base">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">% da porta (bilheteria)</label>
+              <input id="cfg_percentual_porta" type="number" min="0" max="100" step="5" placeholder="50" class="input-base">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Prazo prestação de contas (horas)</label>
+            <input id="cfg_prazo_contas" type="number" min="0" step="12" placeholder="48" class="input-base">
+          </div>
+          <div class="p-3 bg-amber-50 rounded-xl text-xs text-amber-700 leading-relaxed">
+            <strong>Lógica:</strong> maior entre a garantia mínima e o percentual × faturamento bruto.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer do drawer -->
+  <div class="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3">
+    <button onclick="closeConfig()"
+      class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+      Cancelar
+    </button>
+    <button onclick="saveConfig()" id="saveBtn"
+      class="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2">
+      <span id="saveBtnText">Salvar Configurações</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════ TOAST ═══════════════ -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] hidden">
+  <div id="toastMsg" class="px-5 py-3 rounded-2xl text-sm font-semibold shadow-xl text-white"></div>
+</div>
+
+<!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+<script>
+
+// ─── HELPERS ───
+
+function maskDate(el) {
+  let v = el.value.replace(/\D/g, '');
+  if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
+  if (v.length >= 6) v = v.slice(0,5) + '/' + v.slice(5,9);
+  el.value = v;
+}
+
+function toggleAdjacente(side) {
+  document.getElementById(side + '_fields').classList.toggle('hidden');
+}
+
+function fmt(v) {
+  if (v == null) return '—';
+  return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function fmtNum(v) {
+  return Number(v).toLocaleString('pt-BR');
+}
+
+function pct(v, showPlus = true) {
+  if (v == null) return '—';
+  const sign = (showPlus && v > 0) ? '+' : '';
+  return sign + v.toFixed(1).replace('.0','') + '%';
+}
+
+function row(label, value, cls = '') {
+  return `<div class="flex justify-between items-center text-sm py-1">
+    <span class="text-gray-500">${label}</span>
+    <span class="font-medium ${cls}">${value}</span>
+  </div>`;
+}
+
+function divider() {
+  return '<hr class="border-gray-100 my-1">';
+}
+
+function showToast(msg, ok = true) {
+  const t = document.getElementById('toast');
+  const m = document.getElementById('toastMsg');
+  m.textContent = msg;
+  m.className = `px-5 py-3 rounded-2xl text-sm font-semibold shadow-xl text-white ${ok ? 'bg-green-600' : 'bg-red-600'}`;
+  t.classList.remove('hidden');
+  setTimeout(() => t.classList.add('hidden'), 3000);
+}
+
+// ─── CONFIGURAÇÕES ───
+
+async function loadConfig() {
+  try {
+    const res = await fetch('/config');
+    if (!res.ok) return;
+    const cfg = await res.json();
+    applyConfigToDrawer(cfg);
+  } catch (e) {
+    console.warn('Erro ao carregar config:', e);
+  }
+}
+
+function applyConfigToDrawer(cfg) {
+  document.getElementById('cfg_nome_artista').value       = cfg.nome_artista ?? '';
+  document.getElementById('cfg_cache_ticket').value       = cfg.cache_base?.ticket ?? '';
+  document.getElementById('cfg_cache_privado').value      = cfg.cache_base?.privado ?? '';
+  document.getElementById('cfg_cache_prefeitura').value   = cfg.cache_base?.prefeitura ?? '';
+  document.getElementById('cfg_custo_km').value           = cfg.custo_km ?? '';
+  document.getElementById('cfg_limite_terrestre_km').value = cfg.limite_terrestre_km ?? '';
+  document.getElementById('cfg_cidade_base').value         = cfg.cidade_base ?? '';
+  document.getElementById('cfg_uf_base').value             = cfg.uf_base ?? '';
+
+  const dl = cfg.despesas_locais ?? {};
+  document.getElementById('cfg_qtd_pessoas').value    = dl.qtd_pessoas ?? '';
+  document.getElementById('cfg_valor_diaria').value   = dl.valor_diaria_alimentacao_por_pessoa ?? '';
+  document.getElementById('cfg_qtd_camarins').value    = dl.qtd_camarins_exigidos ?? '';
+  document.getElementById('cfg_qtd_carregadores').value = dl.qtd_carregadores ?? '';
+
+  const mt = cfg.modelo_ticket ?? {};
+  const tipoGp   = document.getElementById('cfg_tipo_gp');
+  const tipoFixo = document.getElementById('cfg_tipo_fixo');
+  if (mt.tipo === 'fixo') { tipoFixo.checked = true; tipoGp.checked = false; }
+  else                    { tipoGp.checked = true;   tipoFixo.checked = false; }
+  document.getElementById('cfg_garantia_minima').value  = mt.garantia_minima ?? '';
+  document.getElementById('cfg_percentual_porta').value = mt.percentual_porta ?? '';
+  document.getElementById('cfg_prazo_contas').value     = mt.prazo_prestacao_contas_horas ?? '';
+  toggleGarantiaFields();
+
+  updateDrawerTotals(cfg);
+  updatePageFromConfig(cfg);
+}
+
+function toggleGarantiaFields() {
+  const isGp = document.getElementById('cfg_tipo_gp').checked;
+  document.getElementById('garantiaFields').style.display = isGp ? '' : 'none';
+}
+
+function updateDrawerTotals(cfg) {
+  const dl = cfg.despesas_locais;
+  if (!dl) return;
+  const total = dl.total_despesas_locais_estimado;
+  document.getElementById('cfgTotalDespesas').innerHTML =
+    `Total estimado despesas locais: <strong>${fmt(total)}</strong>`;
+}
+
+function updatePageFromConfig(cfg) {
+  // Atualiza título e dropdown do tipo de show
+  const nome = cfg.nome_artista || 'GICA';
+  document.getElementById('headerTitle').textContent = `Cotação Shows — ${nome}`;
+
+  const sel = document.getElementById('tipo_show');
+  if (cfg.cache_base) {
+    const cb = cfg.cache_base;
+    sel.options[1].text = `🎟️ Ticket (bilheteria) — cache ${fmt(cb.ticket)}`;
+    sel.options[2].text = `🏢 Privado / Corporativo — cache ${fmt(cb.privado)}`;
+    sel.options[3].text = `🏛️ Prefeitura / Poder Público — cache ${fmt(cb.prefeitura)}`;
+  }
+}
+
+function openConfig() {
+  loadConfig();
+  document.getElementById('configOverlay').classList.remove('hidden');
+  setTimeout(() => {
+    document.getElementById('configOverlay').classList.remove('opacity-0');
+    document.getElementById('configDrawer').classList.replace('closed', 'open');
+  }, 10);
+}
+
+function closeConfig() {
+  document.getElementById('configOverlay').classList.add('opacity-0');
+  document.getElementById('configDrawer').classList.replace('open', 'closed');
+  setTimeout(() => document.getElementById('configOverlay').classList.add('hidden'), 250);
+}
+
+async function saveConfig() {
+  const saveBtn  = document.getElementById('saveBtn');
+  const saveTxt  = document.getElementById('saveBtnText');
+  saveBtn.disabled = true;
+  saveTxt.textContent = 'Salvando...';
+
+  const num = id => { const x = document.getElementById(id)?.value; return x !== '' && x != null ? Number(x) : null; };
+  const str = id => document.getElementById(id)?.value?.trim() || null;
+
+  const tipoTicket = document.querySelector('input[name="cfg_ticket_tipo"]:checked')?.value ?? null;
+  const ri = id => { const x = num(id); return x != null ? Math.round(x) : null; };
+
+  const body = {
+    nome_artista:            str('cfg_nome_artista'),
+    cache_ticket:            num('cfg_cache_ticket'),
+    cache_privado:           num('cfg_cache_privado'),
+    cache_prefeitura:        num('cfg_cache_prefeitura'),
+    custo_km:                num('cfg_custo_km'),
+    limite_terrestre_km:     ri('cfg_limite_terrestre_km'),
+    qtd_pessoas:             ri('cfg_qtd_pessoas'),
+    valor_diaria_por_pessoa: num('cfg_valor_diaria'),
+    qtd_camarins:            ri('cfg_qtd_camarins'),
+    qtd_carregadores:        ri('cfg_qtd_carregadores'),
+    ticket_tipo:             tipoTicket,
+    ticket_garantia_minima:  num('cfg_garantia_minima'),
+    ticket_percentual_porta: ri('cfg_percentual_porta'),
+    ticket_prazo_contas:     ri('cfg_prazo_contas'),
+    cidade_base:             str('cfg_cidade_base'),
+    uf_base:                 str('cfg_uf_base')?.toUpperCase() || null,
+  };
+
+  try {
+    const res = await fetch('/config', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      updateDrawerTotals(data);
+      updatePageFromConfig(data);
+      closeConfig();
+      showToast('Configurações salvas com sucesso!');
+    } else {
+      showToast('Erro ao salvar: ' + JSON.stringify(data), false);
+    }
+  } catch (e) {
+    showToast('Erro de conexão: ' + e.message, false);
+  } finally {
+    saveBtn.disabled = false;
+    saveTxt.textContent = 'Salvar Configurações';
+  }
+}
+
+// ─── BUILD PAYLOAD ───
+
+function buildPayload() {
+  const v  = id => document.getElementById(id)?.value?.trim() || null;
+  const n  = id => { const x = document.getElementById(id)?.value; return x ? Number(x) : null; };
+  const cb = id => document.getElementById(id)?.checked ?? false;
+
+  const payload = {
+    tipo_show:           v('tipo_show'),
+    data_evento:         v('data_evento'),
+    cidade:              v('cidade'),
+    estado:              v('estado'),
+    nome_contratante:    v('nome_contratante'),
+    tipo_contratante:    v('tipo_contratante'),
+    show_dia_anterior:   cb('show_dia_anterior'),
+    show_dia_seguinte:   cb('show_dia_seguinte'),
+  };
+
+  const opts = {
+    local:               v('local'),
+    capacidade_publico:  n('capacidade_publico'),
+    hora_inicio:         v('hora_inicio'),
+    duracao_set:         n('duracao_set'),
+    cnpj_cpf:            v('cnpj_cpf'),
+    forma_pagamento:     v('forma_pagamento'),
+    orcamento_informado: n('orcamento_informado'),
+  };
+  for (const [k, val] of Object.entries(opts)) {
+    if (val !== null) payload[k] = val;
+  }
+
+  if (payload.show_dia_anterior) {
+    payload.data_anterior       = v('data_anterior');
+    payload.cidade_dia_anterior = v('cidade_dia_anterior');
+  }
+  if (payload.show_dia_seguinte) {
+    payload.data_seguinte       = v('data_seguinte');
+    payload.cidade_dia_seguinte = v('cidade_dia_seguinte');
+  }
+
+  return payload;
+}
+
+// ─── SUBMIT ───
+
+async function submitForm(e) {
+  e.preventDefault();
+
+  const btn     = document.getElementById('submitBtn');
+  const btnText = document.getElementById('btnText');
+  const btnIcon = document.getElementById('btnIcon');
+
+  btn.disabled = true;
+  btn.classList.add('opacity-70');
+  btnIcon.textContent = '⏳';
+  btnText.textContent = 'Gerando cotação...';
+
+  try {
+    const payload = buildPayload();
+    const res = await fetch('/cotar', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    });
+
+    let data;
+    const text = await res.text();
+    try { data = JSON.parse(text); } catch (_) {
+      renderError({status: 'erro', motivo_negacao: `Erro interno do servidor (HTTP ${res.status}). Verifique o terminal com o uvicorn para detalhes.`, sugestoes: []});
+      return;
+    }
+
+    if (res.ok) renderSuccess(data);
+    else renderError(data.detail || data);
+  } catch (err) {
+    renderError({status: 'erro', motivo_negacao: 'Erro de conexão com a API: ' + err.message, sugestoes: []});
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('opacity-70');
+    btnIcon.textContent = '⚡';
+    btnText.textContent = 'Gerar Cotação';
+    setTimeout(() => {
+      document.getElementById('resultPanel').scrollIntoView({behavior: 'smooth', block: 'start'});
+    }, 80);
+  }
+}
+
+// ─── RENDER SUCCESS ───
+
+function renderSuccess(data) {
+  const p   = data.proposta;
+  const log = p.logistica;
+  const dl  = p.despesas_locais;
+  const mt  = p.modelo_ticket;
+
+  const cenarioMap = {
+    A: '🅐 Show anterior → show atual',
+    B: '🅑 Show atual → show seguinte',
+    C: '🅒 Isolado (saindo de São Paulo)',
+  };
+  const modalIcon = log.modal === 'terrestre' ? '🚛' : '✈️';
+
+  const logCustoHtml = log.logistica_inclusa_cache
+    ? `<span class="text-green-600 font-semibold">Inclusa no cache</span>`
+    : log.modal === 'aereo'
+      ? `<span class="text-amber-600 font-semibold">A cotar</span>`
+      : `<span class="font-semibold text-gray-900">${fmt(log.custo_ida_volta)}</span>`;
+
+  let html = '';
+
+  html += `
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center gap-1.5 bg-green-100 text-green-700 text-sm font-bold px-4 py-2 rounded-full">
+        ✅ APROVADO
+      </span>
+      <span class="text-xs text-gray-400 uppercase">${p.tipo_show} · NF inclusa</span>
+    </div>`;
+
+  html += `
+    <div class="bg-blue-50 border border-blue-100 rounded-2xl p-5">
+      <p class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-2">💬 Resumo da Proposta</p>
+      <p class="text-sm text-blue-900 leading-relaxed">${data.resumo_natural}</p>
+    </div>`;
+
+  html += `
+    <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">💰 Composição Financeira</p>
+      ${row('Cache base (NF inclusa)', fmt(p.cache_base_com_nf))}
+      ${row('Ajuste de urgência', pct(p.ajuste_urgencia_percentual), p.ajuste_urgencia_percentual > 0 ? 'text-red-500' : 'text-gray-700')}
+      ${divider()}
+      ${row('Cache ajustado', fmt(p.cache_ajustado), 'text-gray-900 font-semibold')}
+    </div>`;
+
+  html += `
+    <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">${modalIcon} Logística</p>
+      ${row('Cenário', cenarioMap[log.cenario] || log.cenario)}
+      ${row('Modal', `<span class="capitalize">${log.modal}</span>`)}
+      ${row('Rota', `<span class="text-right max-w-[55%] inline-block">${log.origem} → ${log.destino}</span>`)}
+      ${row('Distância', `${log.distancia_km} km`)}
+      ${divider()}
+      <div class="flex justify-between items-center text-sm py-1">
+        <span class="text-gray-700 font-medium">Custo logístico</span>
+        ${logCustoHtml}
+      </div>
+      ${log.observacao ? `<p class="text-xs text-gray-400 italic mt-2 leading-relaxed">${log.observacao}</p>` : ''}
+    </div>`;
+
+  html += `
+    <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">🏨 Despesas Locais</p>
+      <p class="text-xs text-gray-400 mb-3">Responsabilidade do contratante</p>
+      ${row(`Alimentação (${dl.qtd_pessoas} pessoas × R$${dl.valor_diaria_alimentacao_por_pessoa}/dia)`, fmt(dl.total_alimentacao))}
+      <p class="text-xs text-gray-400 mb-1">Hospedagem: ${dl.hospedagem.qtd_suites} suite · ${dl.hospedagem.qtd_singles} single · ${dl.hospedagem.qtd_duplos} duplo · ${dl.hospedagem.qtd_triplos} triplo</p>
+      <p class="text-xs text-gray-400 mb-1">Traslado local: ${dl.traslado_local.qtd_vans} van · ${dl.traslado_local.qtd_carros_apoio} carro apoio</p>
+      <p class="text-xs text-gray-400 mb-0">Camarins: ${dl.qtd_camarins_exigidos} · Carregadores: ${dl.qtd_carregadores}</p>
+    </div>`;
+
+  if (mt) {
+    html += `
+      <div class="bg-amber-50 border border-amber-100 rounded-2xl p-5">
+        <p class="text-xs font-bold text-amber-600 uppercase tracking-widest mb-3">🎟️ Modelo Ticket — Garantia + Porta</p>
+        ${row('Garantia mínima', fmt(mt.garantia_minima), 'font-semibold')}
+        ${row('Participação na porta', `${mt.percentual_porta}% do faturamento bruto`)}
+        ${row('Base de cálculo', mt.base_calculo)}
+        ${row('Auditoria de bilheteria', mt.auditoria_bilheteria ? '<span class="text-green-600">Obrigatória</span>' : 'Não')}
+        ${row('Prazo prestação de contas', `${mt.prazo_prestacao_contas_horas}h após o evento`)}
+        <p class="text-xs text-amber-700 mt-3 italic leading-relaxed bg-amber-100 rounded-lg p-2">
+          <strong>Lógica:</strong> ${mt.logica}
+        </p>
+      </div>`;
+  }
+
+  html += `
+    <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-7 text-white text-center shadow-xl shadow-blue-200">
+      <p class="text-blue-200 text-xs font-bold uppercase tracking-widest mb-2">Total da Proposta</p>
+      <p class="text-5xl font-black tracking-tight mb-4">${fmt(p.total_proposta)}</p>
+      <div class="flex justify-center flex-wrap gap-4 text-blue-200 text-xs mb-3">
+        <span>📅 Validade: <strong class="text-white">${p.validade_dias_uteis} dias úteis</strong></span>
+        <span>📝 Contrato mínimo: <strong class="text-white">${p.prazo_minimo_contrato_dias} dias</strong></span>
+      </div>
+      <p class="text-blue-300 text-sm">${p.condicoes_pagamento}</p>
+      <p class="text-blue-400 text-xs mt-1">✓ Nota fiscal inclusa em todos os valores</p>
+    </div>`;
+
+  html += `
+    <details class="bg-gray-900 rounded-2xl overflow-hidden group">
+      <summary class="px-5 py-3 text-xs text-gray-500 cursor-pointer hover:text-gray-300 transition-colors flex items-center gap-2">
+        <span class="group-open:rotate-90 transition-transform inline-block">▶</span>
+        Ver JSON completo da resposta
+      </summary>
+      <pre class="px-5 pb-5 text-xs text-green-400 overflow-auto max-h-80 leading-relaxed">${escHtml(JSON.stringify(data, null, 2))}</pre>
+    </details>`;
+
+  showResult(html);
+}
+
+// ─── RENDER ERROR ───
+
+function renderError(detail) {
+  const status = detail.status || 'erro';
+  const motivo = detail.motivo_negacao || 'Erro desconhecido.';
+  const sug    = detail.sugestoes || [];
+
+  const isData = status === 'negado_data';
+  const isLog  = status === 'negado_logistica';
+  const icon   = isData ? '📅' : isLog ? '🚛' : '⚠️';
+  const label  = isData ? 'DATA INDISPONÍVEL' : isLog ? 'LOGÍSTICA INVIÁVEL' : 'ERRO';
+
+  let sugHtml = '';
+  if (sug.length) {
+    sugHtml = `
+      <div class="mt-5">
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Datas alternativas sugeridas</p>
+        <div class="flex flex-wrap gap-2">
+          ${sug.map(d => `
+            <button onclick="preencherData('${d}')" type="button"
+              class="px-4 py-2 bg-white border border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-blue-600 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+              ${d}
+            </button>`).join('')}
+        </div>
+        <p class="text-xs text-gray-400 mt-2">Clique em uma data para preencher o formulário automaticamente</p>
+      </div>`;
+  }
+
+  let html = `
+    <div class="bg-red-50 border border-red-100 rounded-2xl p-6">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="text-3xl">${icon}</span>
+        <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-bold">❌ ${label}</span>
+      </div>
+      <p class="text-sm text-red-800 leading-relaxed">${motivo}</p>
+      ${sugHtml}
+    </div>
+    <details class="bg-gray-900 rounded-2xl overflow-hidden">
+      <summary class="px-5 py-3 text-xs text-gray-500 cursor-pointer hover:text-gray-300 flex items-center gap-2">
+        <span>▶</span> Ver JSON do erro
+      </summary>
+      <pre class="px-5 pb-5 text-xs text-red-400 overflow-auto max-h-60 leading-relaxed">${escHtml(JSON.stringify(detail, null, 2))}</pre>
+    </details>`;
+
+  showResult(html);
+}
+
+// ─── UTILS ───
+
+function showResult(html) {
+  document.getElementById('emptyState').classList.add('hidden');
+  const rc = document.getElementById('resultContent');
+  rc.innerHTML = html;
+  rc.classList.remove('hidden');
+}
+
+function preencherData(data) {
+  document.getElementById('data_evento').value = data;
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── INIT ───
+
+loadConfig();
+
+</script>
+</body>
+</html>
