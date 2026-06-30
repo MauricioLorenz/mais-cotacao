@@ -132,26 +132,9 @@
               </select>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">CNPJ / CPF</label>
-                <input id="cnpj_cpf" type="text" placeholder="00.000.000/0001-00" class="input-base">
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Forma de Pagamento</label>
-                <select id="forma_pagamento" class="input-base">
-                  <option value="">Não informado</option>
-                  <option value="pix">PIX</option>
-                  <option value="ted">TED</option>
-                  <option value="boleto">Boleto</option>
-                  <option value="cheque">Cheque</option>
-                </select>
-              </div>
-            </div>
-
             <div>
-              <label class="block text-xs font-medium text-gray-500 mb-1">Orçamento Informado (R$)</label>
-              <input id="orcamento_informado" type="number" placeholder="50000" min="0" step="0.01" class="input-base">
+              <label class="block text-xs font-medium text-gray-500 mb-1">CNPJ / CPF</label>
+              <input id="cnpj_cpf" type="text" placeholder="00.000.000/0001-00" class="input-base">
             </div>
 
           </div>
@@ -641,8 +624,6 @@ function buildPayload() {
     hora_inicio:         v('hora_inicio'),
     duracao_set:         n('duracao_set'),
     cnpj_cpf:            v('cnpj_cpf'),
-    forma_pagamento:     v('forma_pagamento'),
-    orcamento_informado: n('orcamento_informado'),
   };
   for (const [k, val] of Object.entries(opts)) {
     if (val !== null) payload[k] = val;
