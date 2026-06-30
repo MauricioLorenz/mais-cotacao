@@ -138,8 +138,6 @@ class CotacaoInput(BaseModel):
     nome_contratante: str
     tipo_contratante: str
     cnpj_cpf: Optional[str] = None
-    forma_pagamento: Optional[str] = None
-    orcamento_informado: Optional[float] = None
 
     # --- Roteiro adjacente ---
     show_dia_anterior: bool
