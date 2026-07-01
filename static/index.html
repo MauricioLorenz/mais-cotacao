@@ -338,6 +338,31 @@
 
     <hr class="border-gray-100">
 
+    <!-- Hospedagem -->
+    <div>
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">🛏️ Hospedagem</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Suítes</label>
+          <input id="cfg_qtd_suites" type="number" min="0" placeholder="1" class="input-base">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Quartos Single</label>
+          <input id="cfg_qtd_singles" type="number" min="0" placeholder="2" class="input-base">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Quartos Duplo</label>
+          <input id="cfg_qtd_duplos" type="number" min="0" placeholder="2" class="input-base">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Quartos Triplo</label>
+          <input id="cfg_qtd_triplos" type="number" min="0" placeholder="1" class="input-base">
+        </div>
+      </div>
+    </div>
+
+    <hr class="border-gray-100">
+
     <!-- Modelo Ticket -->
     <div>
       <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">🎟️ Modelo Ticket</h3>
@@ -489,6 +514,12 @@ function applyConfigToDrawer(cfg) {
   document.getElementById('cfg_qtd_camarins').value    = dl.qtd_camarins_exigidos ?? '';
   document.getElementById('cfg_qtd_carregadores').value = dl.qtd_carregadores ?? '';
 
+  const hosp = dl.hospedagem ?? {};
+  document.getElementById('cfg_qtd_suites').value  = hosp.qtd_suites ?? '';
+  document.getElementById('cfg_qtd_singles').value = hosp.qtd_singles ?? '';
+  document.getElementById('cfg_qtd_duplos').value  = hosp.qtd_duplos ?? '';
+  document.getElementById('cfg_qtd_triplos').value = hosp.qtd_triplos ?? '';
+
   const mt = cfg.modelo_ticket ?? {};
   const tipoGp   = document.getElementById('cfg_tipo_gp');
   const tipoFixo = document.getElementById('cfg_tipo_fixo');
@@ -568,6 +599,10 @@ async function saveConfig() {
     valor_diaria_por_pessoa: num('cfg_valor_diaria'),
     qtd_camarins:            ri('cfg_qtd_camarins'),
     qtd_carregadores:        ri('cfg_qtd_carregadores'),
+    qtd_suites:              ri('cfg_qtd_suites'),
+    qtd_singles:             ri('cfg_qtd_singles'),
+    qtd_duplos:              ri('cfg_qtd_duplos'),
+    qtd_triplos:             ri('cfg_qtd_triplos'),
     ticket_tipo:             tipoTicket,
     ticket_garantia_minima:  num('cfg_garantia_minima'),
     ticket_percentual_porta: ri('cfg_percentual_porta'),

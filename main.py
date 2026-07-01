@@ -161,6 +161,10 @@ class CotacaoInput(BaseModel):
     valor_diaria_por_pessoa: Optional[float] = None
     qtd_camarins: Optional[int] = None
     qtd_carregadores: Optional[int] = None
+    qtd_suites: Optional[int] = None
+    qtd_singles: Optional[int] = None
+    qtd_duplos: Optional[int] = None
+    qtd_triplos: Optional[int] = None
     ticket_tipo: Optional[str] = None
     ticket_garantia_minima: Optional[float] = None
     ticket_percentual_porta: Optional[int] = None
@@ -196,6 +200,10 @@ class ConfigInput(BaseModel):
     valor_diaria_por_pessoa: Optional[float] = None
     qtd_camarins: Optional[int] = None
     qtd_carregadores: Optional[int] = None
+    qtd_suites: Optional[int] = None
+    qtd_singles: Optional[int] = None
+    qtd_duplos: Optional[int] = None
+    qtd_triplos: Optional[int] = None
     # Modelo de ticket
     ticket_tipo: Optional[str] = None  # "garantia_porta" | "fixo"
     ticket_garantia_minima: Optional[float] = None
@@ -638,6 +646,15 @@ def _aplicar_config_do_payload(p: "CotacaoInput") -> None:
         dl["qtd_camarins_exigidos"] = p.qtd_camarins
     if p.qtd_carregadores is not None:
         dl["qtd_carregadores"] = p.qtd_carregadores
+    hosp = dl["hospedagem"]
+    if p.qtd_suites is not None:
+        hosp["qtd_suites"] = p.qtd_suites
+    if p.qtd_singles is not None:
+        hosp["qtd_singles"] = p.qtd_singles
+    if p.qtd_duplos is not None:
+        hosp["qtd_duplos"] = p.qtd_duplos
+    if p.qtd_triplos is not None:
+        hosp["qtd_triplos"] = p.qtd_triplos
     dl["total_alimentacao"] = dl["qtd_pessoas"] * dl["valor_diaria_alimentacao_por_pessoa"] * dl["qtd_diarias"]
     dl["total_despesas_locais_estimado"] = dl["total_alimentacao"]
     mt = CONFIG["modelo_ticket"]
@@ -739,6 +756,16 @@ async def update_config(cfg: ConfigInput):
         dl["qtd_camarins_exigidos"] = cfg.qtd_camarins
     if cfg.qtd_carregadores is not None:
         dl["qtd_carregadores"] = cfg.qtd_carregadores
+
+    hosp = dl["hospedagem"]
+    if cfg.qtd_suites is not None:
+        hosp["qtd_suites"] = cfg.qtd_suites
+    if cfg.qtd_singles is not None:
+        hosp["qtd_singles"] = cfg.qtd_singles
+    if cfg.qtd_duplos is not None:
+        hosp["qtd_duplos"] = cfg.qtd_duplos
+    if cfg.qtd_triplos is not None:
+        hosp["qtd_triplos"] = cfg.qtd_triplos
 
     # Recalcula totais derivados
     dl["total_alimentacao"] = (
